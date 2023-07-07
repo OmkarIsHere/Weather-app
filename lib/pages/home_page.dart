@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:ui';
 import 'package:intl/intl.dart';
@@ -7,6 +8,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import '../components/line_chart.dart';
 import '../model/chartPoints.dart';
+import 'package:collection/collection.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -19,9 +21,8 @@ class _HomePageState extends State<HomePage> {
   var lat, lon, weather, temp, temperature, min, max;
   String? country, desc, city, today; // main;
   int? hour;
-  var cnt = 0.0;
   List<dynamic> forcast = [];
-  List<int> chartValue = [];
+  List<double> chartValue = [];
   var apiKey = 'f094631489a586125760c6b70957ee7c';
   bool flag = false;
   bool anotherFlag = false;
@@ -56,7 +57,7 @@ class _HomePageState extends State<HomePage> {
     Position position = await _determinePosition();
     lat = position.latitude;
     lon = position.longitude;
-    print('$lat, $lon');
+
     final url1 =
         'https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=$apiKey';
     final uri1 = Uri.parse(url1);
@@ -96,11 +97,11 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     getData();
-
   }
 
   @override
   Widget build(BuildContext context) {
+
     return SafeArea(
       child: Scaffold(
         backgroundColor:
@@ -121,11 +122,10 @@ class _HomePageState extends State<HomePage> {
                             fontSize: 28,
                           ),
                         ),
-                        Container(
+                        SizedBox(
                           height: 24,
                           width: 24,
-                          color: Colors.red[900],
-                          child: SvgPicture.asset('assets/svg/ic_menu2.svg'),
+                          child: Image.asset('assets/images/menu.png'),//SvgPicture.asset('assets/svg/ic_menu2.svg'),
                         ),
                       ],
                     ),
@@ -218,7 +218,7 @@ class _HomePageState extends State<HomePage> {
                                                 ),
                                               ),
                                               Text(
-                                                '$desc!',
+                                                '$desc',
                                                 style: const TextStyle(
                                                   height: 1,
                                                   fontSize: 18,
@@ -251,10 +251,11 @@ class _HomePageState extends State<HomePage> {
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
-                                      SvgPicture.asset(
-                                          'assets/svg/location-pin.svg'),
-                                      const SizedBox(
-                                        width: 5,
+                                      SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: Image.asset(
+                                            'assets/images/marker-2.png'),
                                       ),
                                       Text(
                                         '$city, $country',
@@ -409,7 +410,7 @@ class _HomePageState extends State<HomePage> {
                     height: 20,
                   ),
                   const Padding(
-                    padding: EdgeInsets.only(left: 15, bottom: 15),
+                    padding: EdgeInsets.only(left: 15),
                     child: Text(
                       'Chances of rain/snow: ',
                       style: TextStyle(
@@ -428,7 +429,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget chart() {
-    return LineChartWidget(chartPointsData);
+    return LineChartWidget(chartPoints);
   }
 
   getPointsData() {
@@ -441,22 +442,16 @@ class _HomePageState extends State<HomePage> {
       final dateTime = data['dt_txt'];
       int time = int.parse(get24Time(dateTime));
       if (time == 12) {
-        cnt++;
         if (desc == 'light rain' || desc == 'light snow') {
-          // ChartPoints chartPoints = ChartPoints(x: 2, y: cnt);
-          chartValue.add(2);
+          chartValue.add(2.0);
         } else if (desc == 'moderate rain' || desc == 'moderate snow') {
-          // ChartPoints chartPoints = ChartPoints(x: 3, y: cnt);
-          chartValue.add(3);
+          chartValue.add(3.0);
         } else if (desc == 'heavy intensity rain' || desc == 'heavy intensity snow') {
-          // ChartPoints chartPoints = ChartPoints(x: 4, y: cnt);
-          chartValue.add(4);
+          chartValue.add(4.0);
         } else {
-          // ChartPoints chartPoints = ChartPoints(x: 1, y: cnt);
-          chartValue.add(1);
+          chartValue.add(1.0);
         }
       }
-          print('$chartValue');
     }
 
   }
@@ -530,6 +525,11 @@ class _HomePageState extends State<HomePage> {
     return formattedTime;
   }
 
+  List<ChartPoints> get chartPoints{
+    return chartValue.mapIndexed(
+        ((index, element) => ChartPoints(x: index.toDouble(), y: element)))
+        .toList();
+  }
 }
 
 class Skeleton extends StatelessWidget {

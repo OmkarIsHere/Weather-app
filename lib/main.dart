@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:weather/pages/home_page.dart';
 
 void main() {
@@ -11,6 +12,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     return MaterialApp(
       title: 'Weather',
       debugShowCheckedModeBanner: false,
@@ -19,6 +21,10 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: 'Nunito_Regular',
       ),
+      // appBar: AppBar( systemOverlayStyle: SystemUiOverlayStyle(
+      //   systemNavigationBarColor: Colors.blue, // Navigation bar
+      //   statusBarColor: Colors.pink, // Status bar
+      // ),),
       home: const HomePage(),
     );
   }
