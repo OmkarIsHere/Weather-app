@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:weather/pages/home_page.dart';
 
@@ -8,7 +9,6 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -19,9 +19,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: 'Nunito_Regular',
       ),
-      home: const HomePage() ,
+      home: const HomePage(),
     );
   }
 }
-
-

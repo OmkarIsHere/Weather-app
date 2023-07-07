@@ -1,11 +1,12 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:ui';
 import 'package:intl/intl.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import '../components/line_chart.dart';
+import '../model/chartPoints.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,7 +19,9 @@ class _HomePageState extends State<HomePage> {
   var lat, lon, weather, temp, temperature, min, max;
   String? country, desc, city, today; // main;
   int? hour;
+  var cnt = 0.0;
   List<dynamic> forcast = [];
+  List<int> chartValue = [];
   var apiKey = 'f094631489a586125760c6b70957ee7c';
   bool flag = false;
   bool anotherFlag = false;
@@ -53,7 +56,7 @@ class _HomePageState extends State<HomePage> {
     Position position = await _determinePosition();
     lat = position.latitude;
     lon = position.longitude;
-
+    print('$lat, $lon');
     final url1 =
         'https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=$apiKey';
     final uri1 = Uri.parse(url1);
@@ -76,9 +79,9 @@ class _HomePageState extends State<HomePage> {
       weather = jsonBody['weather'];
       temp = weather?[0];
       desc = temp['description'];
-      // main = temp['main'];
       city = jsonBody['name'];
       forcast = jsonBody2['list'];
+      getPointsData();
     });
 
     var now = DateTime.now();
@@ -93,6 +96,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     getData();
+
   }
 
   @override
@@ -100,32 +104,33 @@ class _HomePageState extends State<HomePage> {
     return SafeArea(
       child: Scaffold(
         backgroundColor:
-            const Color(0xff1F1D36), //Color(0xff040a3f),//Color(0xff0C134F),
-        body: ListView(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            const Color(0xff1F1D36), //Color(0xff040a3f),//Color(0xff1F1D36),
+        body: flag
+            ? ListView(
                 children: [
-                  const Text(
-                    'Weather forecast',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 15),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Weather forecast',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                          ),
+                        ),
+                        Container(
+                          height: 24,
+                          width: 24,
+                          color: Colors.red[900],
+                          child: SvgPicture.asset('assets/svg/ic_menu2.svg'),
+                        ),
+                      ],
                     ),
                   ),
-                  Container(
-                    height: 24,
-                    width: 24,
-                    color: Colors.red[900],
-                    child: SvgPicture.asset('assets/svg/ic_menu2.svg'),
-                  ),
-                ],
-              ),
-            ),
-            flag
-                ? Padding(
+                  Padding(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
                     child: ClipRect(
@@ -266,115 +271,194 @@ class _HomePageState extends State<HomePage> {
                             )),
                       ),
                     ),
-                  )
-                : const Skeleton(),
-            const SizedBox(
-              height: 20,
-            ),
-            const Padding(
-              padding: EdgeInsets.only(left: 15, bottom: 15),
-              child: Text(
-                'Next 5 days: ',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.white,
-                  fontFamily: 'Nunito_Medium',
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15.0),
-              child: SizedBox(
-                height: 160,
-                width: 80,
-                child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: forcast.length,
-                    itemBuilder: (context, index) {
-                      final data = forcast[index];
-                      final dateTime = data['dt_txt'];
-                      final temperature = data['main']['temp'] - 273.15;
-                      final weather = data['weather'];
-                      final temp = weather?[0];
-                      final desc = temp['description'];
-                      return ClipRect(
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(
-                            sigmaX: 5,
-                            sigmaY: 5,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 5),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(5),
-                                gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      const Color(0xff343058).withOpacity(0.3),
-                                      const Color(0xff504b8e).withOpacity(0.3),
-                                    ]),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.only(left: 15, bottom: 15),
+                    child: Text(
+                      'Next 5 days: ',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontFamily: 'Nunito_Regular',
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                    child: SizedBox(
+                      height: 160,
+                      width: 80,
+                      child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: forcast.length,
+                          itemBuilder: (context, index) {
+                            final data = forcast[index];
+                            final dateTime = data['dt_txt'];
+                            final temperature = data['main']['temp'] - 273.15;
+                            final weather = data['weather'];
+                            final temp = weather?[0];
+                            final desc = temp['description'];
+
+                            // if (int.parse(get24Time(dateTime)) == 00) {
+                            //   cnt++;
+                            //   if (desc == 'light rain' ||
+                            //       desc == 'light snow') {
+                            //     ChartPoints chartPoints =
+                            //         ChartPoints(x: 2, y: cnt);
+                            //     chartValue.add(chartPoints);
+                            //   } else if (desc == 'moderate rain' ||
+                            //       desc == 'moderate snow') {
+                            //     ChartPoints chartPoints =
+                            //         ChartPoints(x: 3, y: cnt);
+                            //     chartValue.add(chartPoints);
+                            //   } else if (desc == 'heavy intensity rain' ||
+                            //       desc == 'heavy intensity snow') {
+                            //     ChartPoints chartPoints =
+                            //         ChartPoints(x: 4, y: cnt);
+                            //     chartValue.add(chartPoints);
+                            //   } else {
+                            //     ChartPoints chartPoints =
+                            //         ChartPoints(x: 1, y: cnt);
+                            //     chartValue.add(chartPoints);
+                            //   }
+                            // }
+                            // print(chartValue);
+                            return ClipRect(
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(
+                                  sigmaX: 5,
+                                  sigmaY: 5,
+                                ),
+                                child: Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 5),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(5),
+                                      gradient: LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [
+                                            const Color(0xff343058)
+                                                .withOpacity(0.3),
+                                            const Color(0xff504b8e)
+                                                .withOpacity(0.3),
+                                          ]),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        const SizedBox(
+                                          height: 10,
+                                        ),
+                                        Text(
+                                          setTime(dateTime),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            height: 1.5,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                        Center(
+                                          child: Container(
+                                            height: 70,
+                                            width: 70,
+                                            child: (4 <=
+                                                        int.parse(get24Time(
+                                                            dateTime)) &&
+                                                    int.parse(get24Time(
+                                                            dateTime)) <=
+                                                        18)
+                                                ? setDayIcon(desc!)
+                                                : setNightIcon(desc!),
+                                          ),
+                                        ),
+                                        const SizedBox(
+                                          height: 10,
+                                        ),
+                                        Text(
+                                          '${temperature.toInt()}॰',
+                                          style: TextStyle(
+                                            color: Colors.amber.shade700,
+                                            height: 1,
+                                            fontSize: 20,
+                                          ),
+                                        ),
+                                        Text(
+                                          setDate(dateTime),
+                                          style: TextStyle(
+                                            color: Colors.grey.shade400,
+                                            height: 1,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  const SizedBox(
-                                    height: 10,
-                                  ),
-                                  Text(
-                                    setTime(dateTime),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      height: 1.5,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  Center(
-                                    child: Container(
-                                      height: 70,
-                                      width: 70,
-                                      child: (4 <=
-                                                  int.parse(
-                                                      get24Time(dateTime)) &&
-                                              int.parse(get24Time(dateTime)) <=
-                                                  18)
-                                          ? setDayIcon(desc!)
-                                          : setNightIcon(desc!),
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    height: 10,
-                                  ),
-                                  Text(
-                                    '${temperature.toInt()}॰',
-                                    style: TextStyle(
-                                      color: Colors.amber.shade700,
-                                      height: 1,
-                                      fontSize: 20,
-                                    ),
-                                  ),
-                                  Text(
-                                    setDate(dateTime),
-                                    style: TextStyle(
-                                      color: Colors.grey.shade400,
-                                      height: 1,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
-              ),
-            ),
-          ],
-        ),
+                            );
+                          }),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.only(left: 15, bottom: 15),
+                    child: Text(
+                      'Chances of rain/snow: ',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontFamily: 'Nunito_Regular',
+                      ),
+                    ),
+                  ),
+                  chart(),
+                ],
+              )
+            : const Skeleton(),
       ),
     );
+  }
+
+  Widget chart() {
+    return LineChartWidget(chartPointsData);
+  }
+
+  getPointsData() {
+
+    for (int i = 0; i < forcast.length; i++) {
+      final data = forcast[i];
+      final weather = data['weather'];
+      final temp = weather?[0];
+      final desc = temp['description'];
+      final dateTime = data['dt_txt'];
+      int time = int.parse(get24Time(dateTime));
+      if (time == 12) {
+        cnt++;
+        if (desc == 'light rain' || desc == 'light snow') {
+          // ChartPoints chartPoints = ChartPoints(x: 2, y: cnt);
+          chartValue.add(2);
+        } else if (desc == 'moderate rain' || desc == 'moderate snow') {
+          // ChartPoints chartPoints = ChartPoints(x: 3, y: cnt);
+          chartValue.add(3);
+        } else if (desc == 'heavy intensity rain' || desc == 'heavy intensity snow') {
+          // ChartPoints chartPoints = ChartPoints(x: 4, y: cnt);
+          chartValue.add(4);
+        } else {
+          // ChartPoints chartPoints = ChartPoints(x: 1, y: cnt);
+          chartValue.add(1);
+        }
+      }
+          print('$chartValue');
+    }
+
   }
 
   setDayIcon(String str) {
@@ -439,12 +523,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   get24Time(String dt) {
-    String dateT = dt;
-    String timeString = dateT.substring(10).trim();
+    String date = dt;
+    String timeString = date.substring(10).trim();
     DateTime dateTime = DateFormat('HH:mm:ss').parse(timeString);
-    String formattedTime = DateFormat('h').format(dateTime);
+    String formattedTime = DateFormat('HH').format(dateTime);
     return formattedTime;
   }
+
 }
 
 class Skeleton extends StatelessWidget {
@@ -452,51 +537,81 @@ class Skeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-            child: Container(
-              height: MediaQuery.of(context).size.height * 0.35,
-              width: MediaQuery.of(context).size.width * 0.9,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(25),
-                color: Colors.grey.withOpacity(0.3),
-              ),
+    return ListView(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(10),
+          child: Container(
+            height: 40,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              color: Colors.grey.withOpacity(0.3),
             ),
           ),
-
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: Container(
-              height: 30,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(5),
-                color: Colors.grey.withOpacity(0.3),
-              ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.35,
+            width: MediaQuery.of(context).size.width * 0.9,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(25),
+              color: Colors.grey.withOpacity(0.3),
             ),
           ),
-          SizedBox(
-            height: 180,
-            child: ListView.builder(
+        ),
+        Padding(
+          padding: const EdgeInsets.all(10),
+          child: Container(
+            height: 40,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              color: Colors.grey.withOpacity(0.3),
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 180,
+          child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: 6,
-              itemBuilder: (context, index){
-              return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Container(
-                  height: 160,
-                  width:80,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(5),
-                    color: Colors.grey.withOpacity(0.3),
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                    height: 160,
+                    width: 80,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(5),
+                      color: Colors.grey.withOpacity(0.3),
+                    ),
                   ),
-                ),
-              );
-
-            }),
-          )
-        ],
+                );
+              }),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(10),
+          child: Container(
+            height: 40,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              color: Colors.grey.withOpacity(0.3),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+          child: AspectRatio(
+            aspectRatio: 4 / 3,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: Colors.grey.withOpacity(0.3),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
