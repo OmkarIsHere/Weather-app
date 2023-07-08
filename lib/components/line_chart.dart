@@ -127,7 +127,7 @@ class LineChartWidget extends StatelessWidget {
               LineChartBarData(
                 spots: points.map((point) => FlSpot(point.x, point.y)).toList(),
                 gradient: const LinearGradient(
-                colors: [Colors.white, Colors.white70, Color(0xff1F1D36)],
+                colors: [Colors.white, Colors.white70,Colors.white70,Color(0xff1F1D36)],
                 ),
                 isCurved: true,
                 dotData: const FlDotData(show: false),

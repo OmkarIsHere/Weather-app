@@ -1,18 +1,20 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:weather/pages/home_page.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
+  MyApp({super.key});
+   final mySystemTheme= SystemUiOverlayStyle.light.copyWith(
+       systemNavigationBarColor:const Color(0xff1F1D36),
+       statusBarColor:const Color(0xff1F1D36));
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    SystemChrome.setSystemUIOverlayStyle(mySystemTheme);
+    // SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     return MaterialApp(
       title: 'Weather',
       debugShowCheckedModeBanner: false,
@@ -21,10 +23,6 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: 'Nunito_Regular',
       ),
-      // appBar: AppBar( systemOverlayStyle: SystemUiOverlayStyle(
-      //   systemNavigationBarColor: Colors.blue, // Navigation bar
-      //   statusBarColor: Colors.pink, // Status bar
-      // ),),
       home: const HomePage(),
     );
   }
