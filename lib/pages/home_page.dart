@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-// import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:ui';
 import 'package:intl/intl.dart';
 import 'package:geolocator/geolocator.dart';
@@ -125,7 +125,7 @@ class _HomePageState extends State<HomePage> {
                         SizedBox(
                           height: 24,
                           width: 24,
-                          child: Image.asset('assets/images/menu.png'),//SvgPicture.asset('assets/svg/ic_menu2.svg'),
+                          child: SvgPicture.asset('assets/svg/ic_menu2.svg'),//Image.asset('assets/images/menu.png'),
                         ),
                       ],
                     ),
@@ -254,8 +254,7 @@ class _HomePageState extends State<HomePage> {
                                       SizedBox(
                                         width: 24,
                                         height: 24,
-                                        child: Image.asset(
-                                            'assets/images/marker-2.png'),
+                                        child:SvgPicture.asset('assets/svg/location-pin.svg'), //Image.asset('assets/images/marker-2.png'),
                                       ),
                                       Text(
                                         '$city, $country',
