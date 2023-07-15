@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'dart:ui';
 import 'package:intl/intl.dart';
 import 'package:geolocator/geolocator.dart';
@@ -18,6 +20,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  late StreamSubscription subscription;
+  bool isDeviceConnected=false;
+  bool isAlertSet = false;
+  bool isRefresh = false;
+
   var lat, lon, weather, temp, temperature, min, max;
   String? country, desc, city, today; // main;
   int? hour;
@@ -96,12 +103,14 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    getData();
+    // getConnectivity();
+    // if(isDeviceConnected){
+      getData();
+    // }
   }
 
   @override
   Widget build(BuildContext context) {
-
     return SafeArea(
       child: Scaffold(
         backgroundColor:
@@ -125,7 +134,8 @@ class _HomePageState extends State<HomePage> {
                         SizedBox(
                           height: 24,
                           width: 24,
-                          child: SvgPicture.asset('assets/svg/ic_menu2.svg'),//Image.asset('assets/images/menu.png'),
+                          child: Image.asset(
+                              'assets/images/menu.png'), //SvgPicture.asset('assets/svg/ic_menu2.svg'),
                         ),
                       ],
                     ),
@@ -254,7 +264,8 @@ class _HomePageState extends State<HomePage> {
                                       SizedBox(
                                         width: 24,
                                         height: 24,
-                                        child:SvgPicture.asset('assets/svg/location-pin.svg'), //Image.asset('assets/images/marker-2.png'),
+                                        child: Image.asset(
+                                            'assets/images/marker-2.png'), //SvgPicture.asset('assets/svg/location-pin.svg'),
                                       ),
                                       Text(
                                         '$city, $country',
@@ -273,7 +284,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   const SizedBox(
-                    height: 20,
+                    height: 20
                   ),
                   const Padding(
                     padding: EdgeInsets.only(left: 15, bottom: 15),
@@ -302,30 +313,6 @@ class _HomePageState extends State<HomePage> {
                             final temp = weather?[0];
                             final desc = temp['description'];
 
-                            // if (int.parse(get24Time(dateTime)) == 00) {
-                            //   cnt++;
-                            //   if (desc == 'light rain' ||
-                            //       desc == 'light snow') {
-                            //     ChartPoints chartPoints =
-                            //         ChartPoints(x: 2, y: cnt);
-                            //     chartValue.add(chartPoints);
-                            //   } else if (desc == 'moderate rain' ||
-                            //       desc == 'moderate snow') {
-                            //     ChartPoints chartPoints =
-                            //         ChartPoints(x: 3, y: cnt);
-                            //     chartValue.add(chartPoints);
-                            //   } else if (desc == 'heavy intensity rain' ||
-                            //       desc == 'heavy intensity snow') {
-                            //     ChartPoints chartPoints =
-                            //         ChartPoints(x: 4, y: cnt);
-                            //     chartValue.add(chartPoints);
-                            //   } else {
-                            //     ChartPoints chartPoints =
-                            //         ChartPoints(x: 1, y: cnt);
-                            //     chartValue.add(chartPoints);
-                            //   }
-                            // }
-                            // print(chartValue);
                             return ClipRect(
                               child: BackdropFilter(
                                 filter: ImageFilter.blur(
@@ -388,12 +375,15 @@ class _HomePageState extends State<HomePage> {
                                             fontSize: 20,
                                           ),
                                         ),
-                                        Text(
-                                          setDate(dateTime),
-                                          style: TextStyle(
-                                            color: Colors.grey.shade400,
-                                            height: 1,
-                                            fontSize: 14,
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 5),
+                                          child: Text(
+                                            setDate(dateTime),
+                                            style: TextStyle(
+                                              color: Colors.grey.shade400,
+                                              height: 1,
+                                              fontSize: 14,
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -406,7 +396,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   const SizedBox(
-                    height: 20,
+                    height: 20
                   ),
                   const Padding(
                     padding: EdgeInsets.only(left: 15),
@@ -432,7 +422,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   getPointsData() {
-
+    if(isRefresh){
+      return;
+    }
     for (int i = 0; i < forcast.length; i++) {
       final data = forcast[i];
       final weather = data['weather'];
@@ -445,14 +437,15 @@ class _HomePageState extends State<HomePage> {
           chartValue.add(2.0);
         } else if (desc == 'moderate rain' || desc == 'moderate snow') {
           chartValue.add(3.0);
-        } else if (desc == 'heavy intensity rain' || desc == 'heavy intensity snow') {
+        } else if (desc == 'heavy intensity rain' ||
+            desc == 'heavy intensity snow') {
           chartValue.add(4.0);
         } else {
           chartValue.add(1.0);
         }
       }
     }
-
+    isRefresh = true;
   }
 
   setDayIcon(String str) {
@@ -524,11 +517,85 @@ class _HomePageState extends State<HomePage> {
     return formattedTime;
   }
 
-  List<ChartPoints> get chartPoints{
-    return chartValue.mapIndexed(
-        ((index, element) => ChartPoints(x: index.toDouble(), y: element)))
+  List<ChartPoints> get chartPoints {
+    return chartValue
+        .mapIndexed(
+            ((index, element) => ChartPoints(x: index.toDouble(), y: element)))
         .toList();
   }
+
+  getConnectivity() {
+    subscription = Connectivity()
+        .onConnectivityChanged
+        .listen((ConnectivityResult result) async {
+      isDeviceConnected = await InternetConnectionChecker().hasConnection;
+      print('Internetconnectionchecker');
+      if (!isDeviceConnected && !isAlertSet) {
+        print('isDeviceConnected false');
+        showDialogBox(context);
+        print('displayed showDialogBox');
+        setState(() => isAlertSet = true);
+      }else{
+        getData();
+        print('getconnectctivity => getData()');
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    subscription.cancel();
+  }
+
+  showDialogBox(BuildContext context) {
+    showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (context){
+    return StatefulBuilder(builder: ((context, setState)
+    {
+      return AlertDialog(
+        insetPadding: const EdgeInsets.all(10),
+        backgroundColor: const Color(0xff343058),
+        title:const Text(
+          'No Internet',
+          style: TextStyle(fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white),
+        ),
+        content:const Text(
+          'Please check your internet connectivity.',
+          style: TextStyle(fontSize: 14, color: Colors.red),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+            child: const Text('Ok', style: TextStyle(color: Colors.black),),
+            onPressed: () async {
+              Navigator.pop(context);
+              setState(() {
+                isAlertSet = false;
+                // if(isDeviceConnected) {
+                //   print('setState => getData');
+                //   getData();
+                // }
+              });
+              isDeviceConnected =
+              await InternetConnectionChecker().hasConnection;
+              if (!isDeviceConnected) {
+                showDialogBox(context);
+                setState(() => isAlertSet = true);
+              }
+            },
+          ),
+        ],
+      );
+    }));
+    });
+  }
+
+
 }
 
 class Skeleton extends StatelessWidget {
