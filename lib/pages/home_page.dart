@@ -103,10 +103,10 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    // getConnectivity();
-    // if(isDeviceConnected){
+    getConnectivity();
+    if(isDeviceConnected){
       getData();
-    // }
+    }
   }
 
   @override
@@ -529,15 +529,11 @@ class _HomePageState extends State<HomePage> {
         .onConnectivityChanged
         .listen((ConnectivityResult result) async {
       isDeviceConnected = await InternetConnectionChecker().hasConnection;
-      print('Internetconnectionchecker');
-      if (!isDeviceConnected && !isAlertSet) {
-        print('isDeviceConnected false');
-        showDialogBox(context);
-        print('displayed showDialogBox');
+      if (!isDeviceConnected && isAlertSet == false) {
         setState(() => isAlertSet = true);
+        if (context.mounted) showDialogBox(context);
       }else{
         getData();
-        print('getconnectctivity => getData()');
       }
     });
   }
@@ -584,7 +580,7 @@ class _HomePageState extends State<HomePage> {
               isDeviceConnected =
               await InternetConnectionChecker().hasConnection;
               if (!isDeviceConnected) {
-                showDialogBox(context);
+                if (context.mounted) showDialogBox(context);
                 setState(() => isAlertSet = true);
               }
             },
