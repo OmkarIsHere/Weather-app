@@ -6,7 +6,7 @@ Welcome to Weather App! This Flutter application allows users to check the weath
 
 ## Demo
 
-will be added shortly....
+https://github.com/OmkarIsHere/Weather-app/assets/101088359/9746acdf-0d8a-4cf9-8d6b-31b730b2bb75
 
 
 ## Features
