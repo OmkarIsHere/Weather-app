@@ -3,8 +3,9 @@
 
 Welcome to Weather App! This Flutter application allows users to check the weather forecast for the next five days, including the probability of rain and snow. With a user-friendly interface, Weather App provides quick access to important weather information, helping you plan your days accordingly.
 
+**Download Apk -** https://drive.google.com/file/d/1Mh0cRJEIo9m5kKR5D61AI3-laq_mnTLY/view?usp=sharing
 
-## Demo
+## Preview
 
 https://github.com/OmkarIsHere/Weather-app/assets/101088359/9746acdf-0d8a-4cf9-8d6b-31b730b2bb75
 
